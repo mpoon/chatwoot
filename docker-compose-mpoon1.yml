@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: chatwoot_dev
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: mypassword
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: chatwoot_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2
+
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    depends_on:
+      - db
+      - redis
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: chatwoot_dev
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: mypassword
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+
+volumes:
+  db_data:
